@@ -123,9 +123,12 @@ bengali2itran_consonants = {
     "৮": "8",
     "৯": "9",
 }
+
+
 bengali2itran_all = {
     **bengali2itran_vowels, **bengali2itran_anuswara,
-    **bengali2itran_sonorants, **bengali2itran_consonants
+    **bengali2itran_sonorants, **bengali2itran_consonants,
+    
 }
 
 def is_vowel_bengali(char):
@@ -152,25 +155,26 @@ def bengali2itran(bengali_string):
         if current_char == "‍্":
             continue
 
+      
         # get the Roman character for the Devanagari character
-        itran_string.append(bengali2itran_all[current_char])
+        if current_char in bengali2itran_all:
+            itran_string.append(bengali2itran_all[current_char])
+        else:
+            itran_string.append(current_char)    
 
         # Handling of "a" sound after a consonant if the next
         # character is not "्" which makes the previous character half
+
         if not is_vowel_bengali(current_char):
             if bengali_string[i+1] != "‍্" and not is_vowel_bengali(bengali_string[i+1]):
                 itran_string.append(bengali2itran_all["অ"])
-
-    itran_string.append(bengali2itran_all[bengali_string[-1]])
+    if is_vowel_bengali(bengali_string[-1]):
+        itran_string.append(bengali2itran_all[bengali_string[-1]])
     if not is_vowel_bengali(bengali_string[-1]):
         itran_string.append(bengali2itran_all["অ"])
-
+    if bengali_string[-1] not in bengali2itran_all:
+        itran_string.append(bengali_string[-1])    
     itran_string = "".join(itran_string)
-
-    # consonant + anuswara should be replaced by
-    # consonant + "a" sound + anuswara
-    reg1 = re.compile("([kKgGfcCjJFtTdDNwWxXnpPbBmyrlvSRsh])M")
-    itran_string = reg1.sub("\g<1>aM", itran_string)
 
     # consonant + anuswara should be replaced by
     # consonant + "a" sound + anuswara
@@ -194,8 +198,22 @@ pairs = [
 # test_df.index = test_df.index + 1
 # print(test_df)
 
-test_df = pd.read_csv('bengali_14921.txt', sep="\n", header=None)
+
+test_df = pd.read_csv('/content/bengalitext', sep="\n", header=None)
 test_df.columns = ["Bengali String"]
-test_df["iTRANS"] = test_df["Bengali String"].apply(bengali2itran)
-print(test_df["iTRANS"])
-test_df["iTRANS"].to_csv(r'output.txt', header=None, index=None, sep='\n', mode='a')
+
+tf = pd.DataFrame(columns=['Bengali String'])
+for i,line in enumerate(test_df['Bengali String']):
+  val = []
+  arr = line.split()
+  val = [bengali2itran(x) for x in arr]
+  tf.loc[i] = " ".join(val)
+
+
+import csv
+
+txt_file = '/content/out'
+open(txt_file, 'w').close()
+with open(txt_file, "w") as my_output_file:
+        [ my_output_file.write(row+'\n') for row in tf['Bengali String']]
+my_output_file.close()
