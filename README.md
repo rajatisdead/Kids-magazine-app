@@ -1,2 +1,3 @@
 # Android Application Development
-- Check this program
+- Android Application for Transliteration
+Work under Progress!
